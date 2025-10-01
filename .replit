@@ -1,0 +1,19 @@
+run = "npm run dev"
+modules = ["nodejs-20"]
+hidden = [".config", "package-lock.json"]
+
+[nix]
+channel = "stable-24_05"
+
+[unitTest]
+language = "nodejs"
+
+[deployment]
+deploymentTarget = "nodejs"
+
+[[ports]]
+localPort = 5173
+externalPort = 80
+
+[agent]
+expertMode = true
