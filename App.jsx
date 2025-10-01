@@ -22,6 +22,7 @@ export default function App() {
   // ---------------- State ----------------
   const [screen, setScreen] = useState("start");
   const [playerNames, setPlayerNames] = useState(["", "", "", ""]);
+  const [playerEmojis, setPlayerEmojis] = useState(["", "", "", ""]);
   const [seatOrder, setSeatOrder] = useState([0, 1, 2, 3]);
   const [scores, setScores] = useState([0, 0, 0, 0]);
   const [roundWind, setRoundWind] = useState("east");
@@ -61,6 +62,10 @@ export default function App() {
     { suit: "dragon", value: "red" },
     { suit: "dragon", value: "green" },
     { suit: "dragon", value: "white" },
+  ];
+
+  const animalEmojis = [
+    "🐯","🐼","🐸","🐵","🦊","🐶","🐱","🦁","🐻","🐷","🐭","🐹","🐨","🐰","🐔","🐴","🐢","🐙"
   ];
 
   function tileImage(tile) {
@@ -384,11 +389,11 @@ export default function App() {
       ...prev,
       {
         round: `${quan}圈 ${windNames[roundWind]}`,
-        winner: playerNames[winIdx] || `玩家${winIdx + 1}`,
+        winner: (playerEmojis[winIdx] || "") + (playerNames[winIdx] || `玩家${winIdx + 1}`),
         loser:
           settlementType === "discard"
-            ? playerNames[parseInt(loser, 10)] ||
-              `玩家${parseInt(loser, 10) + 1}`
+            ? (playerEmojis[parseInt(loser, 10)] || "") +
+              (playerNames[parseInt(loser, 10)] || `玩家${parseInt(loser, 10) + 1}`)
             : "—",
         type: settlementType === "discard" ? "出銃" : "自摸",
         fan: breakdownResult.total,
@@ -407,6 +412,7 @@ export default function App() {
     if (window.confirm("確定要重新開始嗎？")) {
       setScreen("seats");
       setPlayerNames(["", "", "", ""]);
+      setPlayerEmojis(["", "", "", ""]);
       setSeatOrder([0, 1, 2, 3]);
       setScores([0, 0, 0, 0]);
       setRoundWind("east");
@@ -440,20 +446,34 @@ export default function App() {
         {screen === "seats" && (
           <Box maxW="400px" mx="auto" textAlign="center">
             <Text fontSize="xl" mb={4}>
-              輸入玩家名字
+              輸入玩家名字 & 選擇表情
             </Text>
             <Stack spacing={3}>
               {playerNames.map((name, i) => (
-                <Input
-                  key={i}
-                  placeholder={`玩家 ${i + 1}`}
-                  value={name}
-                  onChange={(e) => {
-                    const updated = [...playerNames];
-                    updated[i] = e.target.value;
-                    setPlayerNames(updated);
-                  }}
-                />
+                <Stack direction="row" spacing={2} key={i}>
+                  <Input
+                    placeholder={`玩家 ${i + 1}`}
+                    value={name}
+                    onChange={(e) => {
+                      const updated = [...playerNames];
+                      updated[i] = e.target.value;
+                      setPlayerNames(updated);
+                    }}
+                  />
+                  <Select
+                    placeholder="🙂"
+                    value={playerEmojis[i]}
+                    onChange={(e) => {
+                      const updated = [...playerEmojis];
+                      updated[i] = e.target.value;
+                      setPlayerEmojis(updated);
+                    }}
+                  >
+                    {animalEmojis.map((emo) => (
+                      <option key={emo} value={emo}>{emo}</option>
+                    ))}
+                  </Select>
+                </Stack>
               ))}
             </Stack>
             <Button
@@ -478,7 +498,8 @@ export default function App() {
                 return (
                   <Text key={seat}>
                     {seatNames[seat]}:{" "}
-                    {playerNames[playerIndex] || `玩家${playerIndex + 1}`}　
+                    {(playerEmojis[playerIndex] || "") +
+                      (playerNames[playerIndex] || `玩家${playerIndex + 1}`)}　
                     分數: {scores[playerIndex]}{" "}
                     {i === 0 && (
                       <span style={{ color: "#b8860b", fontWeight: "bold" }}>
@@ -504,7 +525,8 @@ export default function App() {
               >
                 {seatOrder.map((idx) => (
                   <option key={idx} value={idx}>
-                    {playerNames[idx] || `玩家${idx + 1}`}
+                    {(playerEmojis[idx] || "") +
+                      (playerNames[idx] || `玩家${idx + 1}`)}
                   </option>
                 ))}
               </Select>
@@ -521,7 +543,8 @@ export default function App() {
                   >
                     {seatOrder.map((idx) => (
                       <option key={idx} value={idx}>
-                        {playerNames[idx] || `玩家${idx + 1}`}
+                        {(playerEmojis[idx] || "") +
+                          (playerNames[idx] || `玩家${idx + 1}`)}
                       </option>
                     ))}
                   </Select>
@@ -577,12 +600,7 @@ export default function App() {
                     />
                   ))}
                 </Box>
-                <Box
-                  mt={3}
-                  display="flex"
-                  flexWrap="wrap"
-                  gap="6px"
-                >
+                <Box mt={3} display="flex" flexWrap="wrap" gap="6px">
                   {hand.map((tile, i) => (
                     <img
                       key={i}
@@ -612,10 +630,7 @@ export default function App() {
                 <Button colorScheme="yellow" onClick={applySettlement}>
                   確認結算
                 </Button>
-                <Button
-                  colorScheme="blue"
-                  onClick={() => setShowHistory(true)}
-                >
+                <Button colorScheme="blue" onClick={() => setShowHistory(true)}>
                   歷史紀錄
                 </Button>
                 <Button colorScheme="red" onClick={resetGame}>
