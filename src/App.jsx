@@ -23,10 +23,10 @@ export default function App() {
   const [screen, setScreen] = useState("start");
   const [playerNames, setPlayerNames] = useState(["", "", "", ""]);
   const [playerEmojis, setPlayerEmojis] = useState(["", "", "", ""]);
-  const [seatOrder, setSeatOrder] = useState([0, 1, 2, 3]);
   const [scores, setScores] = useState([0, 0, 0, 0]);
   const [roundWind, setRoundWind] = useState("east");
   const [quan, setQuan] = useState(1);
+  const [banker, setBanker] = useState(0); // 0=East, 1=South, etc.
   const [bankerTurnCount, setBankerTurnCount] = useState(0);
 
   const [winner, setWinner] = useState("");
@@ -317,9 +317,7 @@ export default function App() {
     // --- Wind Bonus
     const winIdx = parseInt(winner || -1, 10);
     if (winIdx >= 0) {
-      const winnerSeatWind = ["east", "south", "west", "north"][
-        seatOrder.indexOf(winIdx)
-      ];
+      const winnerSeatWind = ["east", "south", "west", "north"][winIdx];
       const windBonus = windBonuses(hand, winnerSeatWind, roundWind);
       if (windBonus > 0) {
         parts.push(`+ ${windBonus}番 風牌`);
@@ -333,11 +331,14 @@ export default function App() {
   const breakdownResult = calculateBreakdown(hand);
 
   // ---------------- Settlement Flow ----------------
-  function bankerWins() {}
+  function bankerWins() {
+    // banker stays the same
+  }
+
   function bankerLoses() {
-    setSeatOrder((prev) => [prev[1], prev[2], prev[3], prev[0]]);
     setBankerTurnCount((count) => {
       if (count === 3) {
+        // cycle round wind
         setRoundWind((prevWind) => {
           const i = winds.indexOf(prevWind);
           if (i === winds.length - 1) {
@@ -345,8 +346,10 @@ export default function App() {
             return "east";
           } else return winds[i + 1];
         });
+        setBanker(0); // reset banker to Player 1
         return 0;
       }
+      setBanker((prev) => (prev + 1) % 4);
       return count + 1;
     });
   }
@@ -382,7 +385,7 @@ export default function App() {
     }
 
     setScores(newScores);
-    if (seatOrder[0] === winIdx) bankerWins();
+    if (banker === winIdx) bankerWins();
     else bankerLoses();
 
     setHistory((prev) => [
@@ -413,10 +416,10 @@ export default function App() {
       setScreen("seats");
       setPlayerNames(["", "", "", ""]);
       setPlayerEmojis(["", "", "", ""]);
-      setSeatOrder([0, 1, 2, 3]);
       setScores([0, 0, 0, 0]);
       setRoundWind("east");
       setQuan(1);
+      setBanker(0);
       setBankerTurnCount(0);
       setWinner("");
       setLoser("");
@@ -493,22 +496,18 @@ export default function App() {
             </Text>
 
             <Box mt={4}>
-              {["east", "south", "west", "north"].map((seat, i) => {
-                const playerIndex = seatOrder[i];
-                return (
-                  <Text key={seat}>
-                    {seatNames[seat]}:{" "}
-                    {(playerEmojis[playerIndex] || "") +
-                      (playerNames[playerIndex] || `玩家${playerIndex + 1}`)}　
-                    分數: {scores[playerIndex]}{" "}
-                    {i === 0 && (
-                      <span style={{ color: "#b8860b", fontWeight: "bold" }}>
-                        ← 莊家
-                      </span>
-                    )}
-                  </Text>
-                );
-              })}
+              {["east", "south", "west", "north"].map((seat, i) => (
+                <Text key={seat}>
+                  {seatNames[seat]}:{" "}
+                  {(playerEmojis[i] || "") + (playerNames[i] || `玩家${i + 1}`)}　
+                  分數: {scores[i]}{" "}
+                  {banker === i && (
+                    <span style={{ color: "#b8860b", fontWeight: "bold" }}>
+                      ← 莊家
+                    </span>
+                  )}
+                </Text>
+              ))}
             </Box>
 
             <Divider my={4} />
@@ -523,10 +522,9 @@ export default function App() {
                 maxW="200px"
                 mt={2}
               >
-                {seatOrder.map((idx) => (
+                {[0,1,2,3].map((idx) => (
                   <option key={idx} value={idx}>
-                    {(playerEmojis[idx] || "") +
-                      (playerNames[idx] || `玩家${idx + 1}`)}
+                    {(playerEmojis[idx] || "") + (playerNames[idx] || `玩家${idx + 1}`)}
                   </option>
                 ))}
               </Select>
@@ -541,10 +539,9 @@ export default function App() {
                     maxW="200px"
                     mt={2}
                   >
-                    {seatOrder.map((idx) => (
+                    {[0,1,2,3].map((idx) => (
                       <option key={idx} value={idx}>
-                        {(playerEmojis[idx] || "") +
-                          (playerNames[idx] || `玩家${idx + 1}`)}
+                        {(playerEmojis[idx] || "") + (playerNames[idx] || `玩家${idx + 1}`)}
                       </option>
                     ))}
                   </Select>
